@@ -36,6 +36,9 @@ xhs favorites              # 可能返回 API error
 
 > **安装**: `pipx install xiaohongshu-cli`，然后 `xhs login`（自动从浏览器提取 Cookie）。
 >
+> **推荐登录方式**: 如果本机 Chrome 已登录小红书，优先用：
+> `xhs login --cookie-source chrome`
+>
 > **xsec_token 限制**: 小红书强制 xsec_token 机制，**不能直接用裸 note_id 去读**。正确流程是：先 `xhs search` 或 `xhs feed` 获取结果，再用结果中的 URL/ID 去 `xhs read`。直接构造 note_id 会被拦截。
 >
 > **频率控制**: 高频请求（批量搜索、深翻评论）会触发验证码，这是平台限制无法绕过。建议每次操作间隔 2-3 秒。
@@ -94,6 +97,29 @@ twitter likes
 > **安装**: `pipx install twitter-cli`（确保 v0.8.5+）
 >
 > **认证**: 推荐用 Cookie-Editor 导出后设置环境变量 `TWITTER_AUTH_TOKEN` + `TWITTER_CT0`。自动提取在 SSH/Docker/无头环境不可用。
+>
+> **如果已经运行过** `agent-reach configure --from-browser chrome`，优先直接从
+> `~/.agent-reach/config.yaml` 读取保存的 Cookie，再注入给 `twitter-cli`：
+>
+> ```bash
+> TWITTER_AUTH_TOKEN="$(python3 - <<'PY'
+> import yaml
+> from pathlib import Path
+> p = Path.home() / '.agent-reach' / 'config.yaml'
+> data = yaml.safe_load(p.read_text(encoding='utf-8')) if p.exists() else {}
+> print(data.get('twitter_auth_token', ''))
+> PY
+> )" TWITTER_CT0="$(python3 - <<'PY'
+> import yaml
+> from pathlib import Path
+> p = Path.home() / '.agent-reach' / 'config.yaml'
+> data = yaml.safe_load(p.read_text(encoding='utf-8')) if p.exists() else {}
+> print(data.get('twitter_ct0', ''))
+> PY
+> )" twitter search "query" -n 10
+> ```
+>
+> 这样可以绕过 `twitter-cli` 自己读取浏览器 Cookie 时常见的 macOS Keychain 权限问题。
 >
 > **IP 风控**: 不要在 VPS/数据中心 IP 上频繁调用，尤其是 followers/following，有封号风险。使用住宅代理或本地环境。
 >

@@ -57,8 +57,22 @@ curl -s "https://r.jina.ai/URL"
 # GitHub 搜索
 gh search repos "query" --sort stars --limit 10
 
-# Twitter 搜索
-twitter search "query" --limit 10
+# Twitter 搜索（优先使用 Agent Reach 已保存的 Cookie）
+TWITTER_AUTH_TOKEN="$(python3 - <<'PY'
+import yaml
+from pathlib import Path
+p = Path.home() / '.agent-reach' / 'config.yaml'
+data = yaml.safe_load(p.read_text(encoding='utf-8')) if p.exists() else {}
+print(data.get('twitter_auth_token', ''))
+PY
+)" TWITTER_CT0="$(python3 - <<'PY'
+import yaml
+from pathlib import Path
+p = Path.home() / '.agent-reach' / 'config.yaml'
+data = yaml.safe_load(p.read_text(encoding='utf-8')) if p.exists() else {}
+print(data.get('twitter_ct0', ''))
+PY
+)" twitter search "query" --limit 10
 
 # YouTube/B站字幕
 yt-dlp --write-sub --skip-download -o "/tmp/%(id)s" "URL"
